@@ -845,7 +845,7 @@ export async function GenerateOTP(length, email) {
     });
   }
 
-  let addTime = 60 * 1000;
+  let addTime = 300 * 1000;
   let expirationTime = Date.now() + addTime;
   otp = await OtpSchema.create({
     otp: generatedOTP,

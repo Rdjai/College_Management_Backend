@@ -1,7 +1,7 @@
 import { connectToMongo } from "../db/db.js";
 import { app } from "../index.js";
 
-const port = process.env.PORT;
+const port = 3000;
 
 connectToMongo();
 
