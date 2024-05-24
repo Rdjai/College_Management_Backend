@@ -4,6 +4,7 @@ import {
   admnLgnInfUpdtnOTP,
   admnLoginOTP,
   CreateAdmin,
+  getAdminProfile,
   Login,
   updateAdminLoginInfo,
   UpdateAdminPassword,
@@ -15,6 +16,8 @@ import {
   AddNewProfessor,
   AddProfToDept,
   AssignSemToProfessor,
+  getAllProfessors,
+  getPfrssBySearch,
   UpdateProfSalary,
 } from "../../controller/admin/Professor.js";
 import { createSemester } from "../../controller/admin/Semester.js";
@@ -34,8 +37,8 @@ router.post("/add/professor", AdminAuthHandler, AddNewProfessor);
 router.post("/department/add", AdminAuthHandler, createDepartment);
 router.post("/semester/add", AdminAuthHandler, createSemester);
 router.post("/generateOTP/signup", AdminOTP);
-router.post("/create/profile", CreateAdmin);
 router.post("/generateOTP/login", admnLoginOTP);
+router.post("/create/profile", CreateAdmin);
 router.post(
   "/generateOTP/update_login_ids",
   AdminAuthHandler,
@@ -44,9 +47,12 @@ router.post(
 
 // get APIs
 router.get("/get/student/:mobile_no", AdminAuthHandler, GetStudentProfile);
+router.get("/get/profile", AdminAuthHandler, getAdminProfile);
 router.get("/get/allStudents", AdminAuthHandler, GetAllStudents);
+router.get("/get/all_professors", AdminAuthHandler, getAllProfessors);
 router.get("/verifyOTP/signup", VerfiyAdminOTP);
 router.get("/login", Login);
+router.get("/get/professor_query", AdminAuthHandler, getPfrssBySearch);
 
 // put  APIs
 router.put("/department/add_professor", AdminAuthHandler, AddProfToDept);
