@@ -178,9 +178,8 @@ export const AddNewStudent = async (req, res) => {
                         
                         We're excited for the journey ahead and are here to support you every step of the way. Whether you have questions, need guidance, or want to explore opportunities, our team is here to help.
                         
-                        Welcome aboard, ${
-                          firstName + " " + lastName
-                        }! Let's make your time at Dr.MPS Group Of Institutions,Agra unforgettable!
+                        Welcome aboard, ${firstName + " " + lastName
+                          }! Let's make your time at Dr.MPS Group Of Institutions,Agra unforgettable!
                         
                         Best regards,
                         
@@ -324,7 +323,7 @@ export const GetStudentProfile = async (req, res) => {
 };
 
 export const updateStudentFee = async (req, res) => {
-  let { amount, semName, student_id } = req.body;
+  let { amount, semName, student_id } = req.query;
   try {
     if (!amount || !semName || !student_id) {
       res
