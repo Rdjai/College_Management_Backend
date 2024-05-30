@@ -873,7 +873,7 @@ export default async function MailSender(
 ) {
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
+      host: "smtp-relay.brevo.com",
       port: 587,
       secure: false,
       auth: {

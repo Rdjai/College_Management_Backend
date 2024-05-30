@@ -8,8 +8,6 @@ import StudentSchema from "../../models/student/StudentSchema.js";
 import bcryptjs from "bcryptjs";
 import otpGenerator from "otp-generator";
 import mongoose from "mongoose";
-import MailSender from "./Admin.js";
-import ProfessorSchema from "../../models/professor/Professor.js";
 
 export const AddNewStudent = async (req, res) => {
   let {
@@ -160,22 +158,21 @@ export const AddNewStudent = async (req, res) => {
                         }
                       );
 
-                      let prof = await ProfessorSchema.findOne({
-                        $and: [
-                          {
-                            departments: {
-                              $elemMatch: { name: department.name },
-                            },
-                          },
-                          { position: "Head of Department (HOD)" },
-                        ],
+                      const transporter = nodemailer.createTransport({
+                        host: "smtp-relay.brevo.com",
+                        port: 587,
+                        secure: false,
+                        auth: {
+                          user: process.env.SMTP_SERVER_AUTH,
+                          pass: process.env.SMTP_SERVER_PASS,
+                        },
                       });
-                      console.log(prof.firstName);
-                      if (prof) {
-                        const info = await MailSender(
-                          email,
-                          "Welcome at Dr.MPS Group Of Institutions,Agra",
-                          `Dear ${firstName + " " + lastName},
+
+                      const info = await transporter.sendMail({
+                        from: `Raman 👻" <${process.env.SENDER_EMAIL}>`,
+                        to: email,
+                        subject: "Welcome at Dr.MPS Group Of Institutions,Agra",
+                        text: `Dear ${firstName + " " + lastName},
 
                         Congratulations on your admission to Dr.MPS Group Of Institutions,Agra! 🎉 We're thrilled to welcome you to our community.
                         
@@ -183,6 +180,9 @@ export const AddNewStudent = async (req, res) => {
                         
                         Welcome aboard, ${firstName + " " + lastName
                           }! Let's make your time at Dr.MPS Group Of Institutions,Agra unforgettable!
+
+                        This is your new Password: ${student.studentID} which is gonna used during login. 
+                        Kindy We request to change your password in future.
                         
                         Best regards,
                         
@@ -191,90 +191,96 @@ export const AddNewStudent = async (req, res) => {
                         Dr.MPS Group Of Institutions,Agra `,
                       });
 
-            res.status(200).json({
-              message: "Student Registered Sussecfully",
-              student,
-              success: true,
-            });
+                      res.status(200).json({
+                        message: "Student Registered Sussecfully",
+                        student,
+                        success: true,
+                      });
+                    } else {
+                      student = await StudentSchema.findByIdAndDelete(
+                        student._id
+                      );
+                      educationInfo.map(async (i) => {
+                        student = await EducationSchema.findByIdAndDelete(
+                          i._id
+                        );
+                      });
+                      currentAddress = await AddressSchema.findByIdAndDelete(
+                        currentAddress._id
+                      );
+                      res.status(404).json({
+                        message:
+                          "There's no Semester with This Name Kindly Create a new One",
+                        success: false,
+                      });
+                    }
+                  } else {
+                    student = await StudentSchema.findByIdAndDelete(
+                      student._id
+                    );
+                    educationInfo.map(async (i) => {
+                      student = await EducationSchema.findByIdAndDelete(i._id);
+                    });
+                    currentAddress = await AddressSchema.findByIdAndDelete(
+                      currentAddress._id
+                    );
+                    res.status(200).json({
+                      message:
+                        "Student Registration failed Due to Department not found Pls create Department",
+                      success: false,
+                    });
+                  }
+                } else {
+                  student = await StudentSchema.findByIdAndDelete(student._id);
+                  educationInfo.map(async (i) => {
+                    student = await EducationSchema.findByIdAndDelete(i._id);
+                  });
+                  currentAddress = await AddressSchema.findByIdAndDelete(
+                    currentAddress._id
+                  );
+                  res.status(200).json({
+                    message:
+                      "Student Registration failed Due to invalid Education Info",
+                    success: false,
+                  });
+                }
+              })
+              .catch((err) => {
+                throw new Error(err);
+              });
           } else {
-            student = await StudentSchema.findByIdAndDelete(
-              student._id
-            );
-            educationInfo.map(async (i) => {
-              student = await EducationSchema.findByIdAndDelete(
-                i._id
-              );
-            });
+            student = await StudentSchema.findByIdAndDelete(student._id);
             currentAddress = await AddressSchema.findByIdAndDelete(
               currentAddress._id
             );
-            res.status(404).json({
-              message:
-                "There's no Semester with This Name Kindly Create a new One",
+            res.status(200).json({
+              message: "Student Registration failed Due to invalid Address",
               success: false,
             });
           }
         } else {
-          student = await StudentSchema.findByIdAndDelete(
-            student._id
-          );
-          educationInfo.map(async (i) => {
-            student = await EducationSchema.findByIdAndDelete(i._id);
-          });
-          currentAddress = await AddressSchema.findByIdAndDelete(
-            currentAddress._id
-          );
-          res.status(500).json({
+          res.status(200).json({
             message:
-              "Student Registration failed Due to Department not found Pls create Department",
+              "Student Registration failed Pls Try again after Some time",
             success: false,
           });
         }
-      } else {
-        student = await StudentSchema.findByIdAndDelete(student._id);
-        educationInfo.map(async (i) => {
-          student = await EducationSchema.findByIdAndDelete(i._id);
-        });
-        currentAddress = await AddressSchema.findByIdAndDelete(
-          currentAddress._id
-        );
-        res.status(500).json({
-          message:
-            "Student Registration failed Due to invalid Education Info",
-          success: false,
-        });
-      }
-    })
-              .catch ((err) => {
-  throw new Error(err);
-});
-          } else {
-  student = await StudentSchema.findByIdAndDelete(student._id);
-  currentAddress = await AddressSchema.findByIdAndDelete(
-    currentAddress._id
-  );
-  res.status(500).json({
-    message: "Student Registration failed Due to invalid Address",
-    success: false,
-  });
-}
-        } else {
-  res.status(500).json({
-    message:
-      "Student Registration failed Pls Try again after Some time",
-    success: false,
-  });
-}
       }
     }
   } catch (error) {
-  // console.log(error);
-  ErrorHandler(req, res, error);
-}
+    // console.log(error);
+    ErrorHandler(req, res, error);
+  }
 };
 
 export const GetStudentProfile = async (req, res) => {
-  let { vrfNameOrNumber } = req.body;
+  let {
+    firstName,
+    lastName,
+    vrfNameOrNumber,
+    national_id,
+    national_id_number,
+  } = req.body;
   try {
     if (!vrfNameOrNumber) {
       res
@@ -284,11 +290,21 @@ export const GetStudentProfile = async (req, res) => {
       let student;
       if (typeof vrfNameOrNumber === "number") {
         student = await StudentSchema.findOne({
-          mobile_no: vrfNameOrNumber,
+          $or: [
+            { mobile_no: vrfNameOrNumber },
+            { enrollment_no: vrfNameOrNumber },
+            { $and: [{ national_id }, { national_id_number }] },
+          ],
         });
       } else {
         student = await StudentSchema.findOne({
-          studentID: vrfNameOrNumber,
+          $or: [
+            {
+              studentID: vrfNameOrNumber,
+            },
+            { $and: [{ firstName }, { lastName }] },
+            { $and: [{ national_id }, { national_id_number }] },
+          ],
         });
       }
       if (student) {
@@ -437,7 +453,7 @@ export const updateStudentFee = async (req, res) => {
           } else {
             res.status(404).json({
               message:
-                "Please Provide the Semester that Student have Passed or Currently Attending",
+                "Please Provide the Semester that you've Passed or Currently Attending",
               success: false,
             });
             return;
@@ -464,6 +480,7 @@ export const updateStudentFee = async (req, res) => {
 };
 
 export const GetAllStudents = async (req, res) => {
+
   try {
     let students = await StudentSchema.find();
     if (students.length > 0) {
